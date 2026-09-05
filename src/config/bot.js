@@ -517,16 +517,24 @@ export function validateConfig(config) {
   if (process.env.NODE_ENV === 'production') {
     // A full connection URL (DATABASE_URL / POSTGRES_URL) satisfies all Postgres
     // requirements, matching how src/config/database/postgres.js resolves the pool config.
+    // Alternatively, all individual connection fields (host/user/password) can be
+    // provided on their own -- each of which may itself be an unresolved Railway
+    // reference (e.g. "${{ postgres.PGHOST }}").
     const hasConnectionUrl = isPresentOrReference(process.env.POSTGRES_URL) || isPresentOrReference(process.env.DATABASE_URL);
+    const hasHost = isPresentOrReference(process.env.POSTGRES_HOST);
+    const hasUser = isPresentOrReference(process.env.POSTGRES_USER);
+    const hasPassword = isPresentOrReference(process.env.POSTGRES_PASSWORD);
 
-    if (!hasConnectionUrl) {
-      if (!isPresentOrReference(process.env.POSTGRES_HOST)) {
+    const hasValidPostgresConfig = hasConnectionUrl || (hasHost && hasUser && hasPassword);
+
+    if (!hasValidPostgresConfig) {
+      if (!hasHost) {
         errors.push("PostgreSQL connection is required in production (set DATABASE_URL/POSTGRES_URL, or POSTGRES_HOST)");
       }
-      if (!isPresentOrReference(process.env.POSTGRES_USER)) {
+      if (!hasUser) {
         errors.push("PostgreSQL user is required in production (set DATABASE_URL/POSTGRES_URL, or POSTGRES_USER)");
       }
-      if (!isPresentOrReference(process.env.POSTGRES_PASSWORD)) {
+      if (!hasPassword) {
         errors.push("PostgreSQL password is required in production (set DATABASE_URL/POSTGRES_URL, or POSTGRES_PASSWORD)");
       }
     }
