@@ -481,7 +481,7 @@ export const botConfig = {
 // These are placeholders that Railway resolves to real values at runtime, *after*
 // this module is first evaluated. A reference should therefore be treated as a
 // promise that the value will be present, not as a missing/empty value.
-const RAILWAY_REFERENCE_PATTERN = /^\$\{\{.*\}\}$/;
+const RAILWAY_REFERENCE_PATTERN = /^\s*\$\{\{\s*[a-zA-Z0-9\-_.]+\.[A-Z_]+\s*\}\}\s*$/;
 
 function isRailwayReference(value) {
   return typeof value === "string" && RAILWAY_REFERENCE_PATTERN.test(value.trim());
