@@ -477,22 +477,6 @@ export const botConfig = {
   },
 };
 
-// Matches Railway's variable reference syntax, e.g. "${{ postgres.DATABASE_URL }}".
-// These are placeholders that Railway resolves to real values at runtime, *after*
-// this module is first evaluated. A reference should therefore be treated as a
-// promise that the value will be present, not as a missing/empty value.
-const RAILWAY_REFERENCE_PATTERN = /^\$\{\{.*\}\}$/;
-
-function isRailwayReference(value) {
-  return typeof value === "string" && RAILWAY_REFERENCE_PATTERN.test(value.trim());
-}
-
-// A variable "passes" validation if it has a real value, or if it is currently
-// an unresolved Railway reference (which will be substituted before it's used).
-function isPresentOrReference(value) {
-  return Boolean(value) || isRailwayReference(value);
-}
-
 export function validateConfig(config) {
   const errors = [];
 
@@ -506,27 +490,27 @@ export function validateConfig(config) {
     logger.debug('NODE_ENV:', process.env.NODE_ENV);
   }
 
-  if (!isPresentOrReference(process.env.DISCORD_TOKEN) && !isPresentOrReference(process.env.TOKEN)) {
+  if (!process.env.DISCORD_TOKEN && !process.env.TOKEN) {
     errors.push("Bot token is required (DISCORD_TOKEN or TOKEN environment variable)");
   }
 
-  if (!isPresentOrReference(process.env.CLIENT_ID)) {
+  if (!process.env.CLIENT_ID) {
     errors.push("Client ID is required (CLIENT_ID environment variable)");
   }
 
   if (process.env.NODE_ENV === 'production') {
     // A full connection URL (DATABASE_URL / POSTGRES_URL) satisfies all Postgres
     // requirements, matching how src/config/database/postgres.js resolves the pool config.
-    const hasConnectionUrl = isPresentOrReference(process.env.POSTGRES_URL) || isPresentOrReference(process.env.DATABASE_URL);
+    const hasConnectionUrl = Boolean(process.env.POSTGRES_URL || process.env.DATABASE_URL);
 
     if (!hasConnectionUrl) {
-      if (!isPresentOrReference(process.env.POSTGRES_HOST)) {
+      if (!process.env.POSTGRES_HOST) {
         errors.push("PostgreSQL connection is required in production (set DATABASE_URL/POSTGRES_URL, or POSTGRES_HOST)");
       }
-      if (!isPresentOrReference(process.env.POSTGRES_USER)) {
+      if (!process.env.POSTGRES_USER) {
         errors.push("PostgreSQL user is required in production (set DATABASE_URL/POSTGRES_URL, or POSTGRES_USER)");
       }
-      if (!isPresentOrReference(process.env.POSTGRES_PASSWORD)) {
+      if (!process.env.POSTGRES_PASSWORD) {
         errors.push("PostgreSQL password is required in production (set DATABASE_URL/POSTGRES_URL, or POSTGRES_PASSWORD)");
       }
     }
